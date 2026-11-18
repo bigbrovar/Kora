@@ -1,5 +1,8 @@
 """Main window: connect page, sidebar, browse stack, queue and player bar."""
 
+import os
+import re
+import sys
 import time
 
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
@@ -15,12 +18,11 @@ CSS = """
 .cover { border-radius: 9px; background-color: alpha(currentColor, 0.08); }
 .cover-small { border-radius: 5px; background-color: alpha(currentColor, 0.08); }
 /* Secondary text (the smaller, greyer line under a title).
-   It deliberately avoids two stock style classes:
-   - "caption": newer libadwaita gives it line-height: 140%, and on GTK 4.24
-     that cuts the top row of pixels off single-line labels;
-   - "dim-label": it dims through widget opacity, which makes GTK draw the
-     label into a separate layer. Dimming through the colour is simpler. */
-.kora-small { font-size: 82%; }
+   Sized with "smaller", the same rule libadwaita uses for its own subtitles,
+   and dimmed through the colour. It avoids the stock "caption" class (newer
+   libadwaita adds line-height: 140% to it) and "dim-label" (widget opacity).
+   KORA_SMALL_TEXT overrides the size for testing, e.g. KORA_SMALL_TEXT=90%. */
+.kora-small { font-size: smaller; }
 .kora-dim { color: alpha(currentColor, 0.6); }
 .playerbar { padding: 6px 10px; }
 .playerbar scale trough, .playerbar scale highlight { border-radius: 99px; }
@@ -114,17 +116,27 @@ class KoraWindow(Adw.ApplicationWindow):
         try:
             fn()
         except Exception:
-            import sys
             import traceback
             print(f"kora: {what} is unavailable on this system:", file=sys.stderr)
             traceback.print_exc()
 
     def _load_css(self):
+        css = CSS
+        size = os.environ.get("KORA_SMALL_TEXT", "").strip()
+        if size:
+            if re.fullmatch(r"smaller|\d{2,3}%|\d+(\.\d+)?(pt|px|em)", size):
+                css = css.replace(".kora-small { font-size: smaller; }",
+                                  f".kora-small {{ font-size: {size}; }}")
+                print(f"kora: small text size set to {size}", file=sys.stderr, flush=True)
+            else:
+                print(f"kora: ignoring KORA_SMALL_TEXT={size!r} "
+                      "(use smaller, a percentage like 90%, or a size like 9pt)",
+                      file=sys.stderr, flush=True)
         provider = Gtk.CssProvider()
         if hasattr(provider, "load_from_string"):
-            provider.load_from_string(CSS)
+            provider.load_from_string(css)
         else:
-            provider.load_from_data(CSS.encode())
+            provider.load_from_data(css.encode())
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
