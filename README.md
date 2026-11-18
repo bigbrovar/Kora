@@ -32,8 +32,9 @@ It is named after the kora, the 21-string West African harp-lute.
   player menu.
 - **Queue**: a side panel where you can jump to a track, remove one, or clear
   everything.
-- **Don't Stop The Music**: choose the provider, or turn it off, per player
-  from the bottom of the queue panel.
+- **Don't Stop The Music**: the repeat button cycles through off, repeat
+  song, repeat queue and Don't Stop The Music, like the LMS web interface.
+  Choose which provider it uses, per player, at the bottom of the queue panel.
 - **Listen on this computer**, in one of two ways:
   - *This computer*: a built-in output that streams library tracks straight
     from the server. Nothing else to install.
