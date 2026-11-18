@@ -793,11 +793,15 @@ class KoraWindow(Adw.ApplicationWindow):
                 player.set_repeat(2)
             elif target == "dstm":
                 player.set_repeat(0)
-                choice = next((o for o in options[1:] if str(o["cmd"][-1]) == wanted), options[1])
+                # Provider to switch on: the one the web interface saved, else
+                # the one last used here, else the first the server offers.
+                by_token = {str(o["cmd"][-1]): o for o in options[1:]}
+                choice = by_token.get(player.dstm_saved()) or by_token.get(wanted) or options[1]
                 player.dstm_set(choice["cmd"])
             else:
                 player.set_repeat(0)
                 if was_on and options:
+                    player.dstm_save()
                     player.dstm_set(options[0]["cmd"])     # the "Disabled" entry
 
         def done(_result):

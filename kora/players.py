@@ -173,6 +173,24 @@ class LMSPlayer:
     def dstm_set(self, cmd):
         self._do(*cmd)
 
+    # The Material Skin web interface keeps "the provider to go back to" on
+    # the server when it switches Don't Stop The Music off. Using the same
+    # slot keeps Kora and the web interface in step. Both calls are harmless
+    # no-ops on servers without Material Skin.
+
+    def dstm_saved(self):
+        try:
+            value = self._do("material-skin-client", "get-dstm").get("provider")
+        except LMSError:
+            return ""
+        return "" if value in (None, "", 0, "0") else str(value)
+
+    def dstm_save(self):
+        try:
+            self._do("material-skin-client", "save-dstm")
+        except LMSError:
+            pass
+
     # -------------------------------------------------------------------- sync
 
     def sync_add(self, other_id):

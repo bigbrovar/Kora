@@ -132,8 +132,11 @@ class ClientTests(unittest.TestCase):
         self.assertTrue(options[0]["selected"])
         p.dstm_set(options[2]["cmd"])
         self.assertEqual([o["selected"] for o in p.dstm_options()], [False, False, True, False])
+        self.assertEqual(p.dstm_saved(), "")                 # nothing saved yet
+        p.dstm_save()                                        # remember the active provider
         p.dstm_set(options[0]["cmd"])
         self.assertTrue(p.dstm_options()[0]["selected"])
+        self.assertEqual(p.dstm_saved(), str(options[2]["cmd"][-1]))
         station = self.c.favorites(0, 5)[0][0]
         p.play_item(station, "load")
         self.assertEqual(p.status()["title"], station.title)
