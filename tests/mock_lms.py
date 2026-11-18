@@ -228,6 +228,13 @@ def handle(pid, cmd):
             loop.append({"text": text, "radio": 1 if token == current else 0, "actions": {"do": {
                 "player": 0, "cmd": ["playerpref", "plugin.dontstopthemusic:provider", token]}}})
         return {"offset": 0, "count": len(loop), "item_loop": loop}
+    if name == "material-skin-client":      # the two calls Material Skin adds for DSTM
+        if args[0] == "save-dstm":
+            pl.dstm_saved = getattr(pl, "dstm", "")
+            return {}
+        if args[0] == "get-dstm":
+            return {"provider": getattr(pl, "dstm_saved", "") or 0}
+        return {}
     if name == "playerpref":
         if args[0] == "plugin.dontstopthemusic:provider":
             pl.dstm = "" if args[1] == "0" else args[1]

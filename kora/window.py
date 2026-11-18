@@ -71,6 +71,9 @@ class KoraWindow(Adw.ApplicationWindow):
         self._setting = False
         self._want_player_name = ""
         self._search_page = None
+        self.dstm_opts = []      # providers offered for the selected player
+        self.dstm_on = False
+        self.dstm_name = ""
 
         self.skip = set(getattr(app, "skip", ()))     # optional parts to leave out
         self.probe = bool(getattr(app, "probe", False))
@@ -393,9 +396,16 @@ class KoraWindow(Adw.ApplicationWindow):
             if player is not self.player:
                 return
             self.dstm_btn.set_sensitive(True)
+            self.dstm_btn.set_tooltip_text("Keep playing similar music when the queue ends")
             current = next((o for o in options if o["selected"]), None)
             is_on = current is not None and current is not options[0]
             self.dstm_state.set_label(current["text"] if is_on else "Off")
+            self.dstm_opts = options
+            self.dstm_on = is_on
+            self.dstm_name = current["text"] if is_on else ""
+            if is_on:      # remember the provider so the repeat button can bring it back
+                self.cfg.set("dstm_provider", str(current["cmd"][-1]))
+            self._update_repeat_button()
             if not fill:
                 return
             self._dstm_fill(player, options)
@@ -404,6 +414,8 @@ class KoraWindow(Adw.ApplicationWindow):
             if player is not self.player:
                 return
             self.dstm_state.set_label("Needs an LMS player" if player.is_local else "Unavailable")
+            self.dstm_opts, self.dstm_on, self.dstm_name = [], False, ""
+            self._update_repeat_button()
             self.dstm_btn.set_sensitive(False)
             self.dstm_btn.set_tooltip_text(
                 str(exc) if player.is_local else
@@ -611,6 +623,8 @@ class KoraWindow(Adw.ApplicationWindow):
 
     def _tick_players(self):
         client = self.client
+        if client is not None and self.player is not None and not self.dstm_pop.get_visible():
+            self._dstm_refresh()
         if client is not None:
             run_async(client.server_status,
                       lambda info: client is self.client and self._on_server_status(info),
@@ -653,6 +667,7 @@ class KoraWindow(Adw.ApplicationWindow):
         self.player_content.set_label(player.name)
         self._queue_sig = None
         self._bar_art = None
+        self.dstm_opts, self.dstm_on, self.dstm_name = [], False, ""
         self._rebuild_player_menu()
         self._dstm_refresh()
         self._poll()
@@ -753,9 +768,66 @@ class KoraWindow(Adw.ApplicationWindow):
         mode = 0 if self.st["shuffle"] else 1
         self.command(lambda p: p.set_shuffle(mode))
 
+    # The repeat button cycles: off, repeat song, repeat queue, Don't Stop The
+    # Music, off. The last step is only offered when the server plugin has at
+    # least one provider for the selected player.
+
+    def _repeat_mode(self):
+        if self.st["repeat"] == 1:
+            return "song"
+        if self.st["repeat"] == 2:
+            return "all"
+        return "dstm" if self.dstm_on else "off"
+
     def _cycle_repeat(self, _button):
-        mode = {0: 2, 2: 1, 1: 0}.get(self.st["repeat"], 0)
-        self.command(lambda p: p.set_repeat(mode))
+        player = self.player
+        if player is None:
+            self.toast("No player selected")
+            return
+        options = list(self.dstm_opts)
+        order = ["off", "song", "all"] + (["dstm"] if len(options) > 1 else [])
+        current = self._repeat_mode()
+        target = order[(order.index(current) + 1) % len(order)] if current in order else "off"
+        was_on = self.dstm_on
+        wanted = self.cfg.get("dstm_provider")
+
+        def work():
+            if target == "song":
+                player.set_repeat(1)
+            elif target == "all":
+                player.set_repeat(2)
+            elif target == "dstm":
+                player.set_repeat(0)
+                # Provider to switch on: the one the web interface saved, else
+                # the one last used here, else the first the server offers.
+                by_token = {str(o["cmd"][-1]): o for o in options[1:]}
+                choice = by_token.get(player.dstm_saved()) or by_token.get(wanted) or options[1]
+                player.dstm_set(choice["cmd"])
+            else:
+                player.set_repeat(0)
+                if was_on and options:
+                    player.dstm_save()
+                    player.dstm_set(options[0]["cmd"])     # the "Disabled" entry
+
+        def done(_result):
+            self.poll_soon()
+            self._dstm_refresh()
+        run_async(work, done, self.toast_error)
+
+    def _update_repeat_button(self):
+        mode = self._repeat_mode()
+        self._mark(self.repeat_btn, mode != "off")
+        self.repeat_btn.set_icon_name({
+            "song": "media-playlist-repeat-song-symbolic",
+            "dstm": "kora-dstm-symbolic",
+        }.get(mode, "media-playlist-repeat-symbolic"))
+        self.repeat_btn.set_tooltip_text({
+            "off": "Repeat is off",
+            "song": "Repeating this song",
+            "all": "Repeating the queue",
+            "dstm": "Don't Stop the Music is on"
+                    + (f" ({self.dstm_name})" if self.dstm_name else ""),
+        }[mode])
 
     def _seek_changed(self, _scale, _scroll, value):
         self._seek_hold = time.monotonic() + 1.5
@@ -846,12 +918,7 @@ class KoraWindow(Adw.ApplicationWindow):
             self._setting = False
 
         self._mark(self.shuffle_btn, st["shuffle"] > 0)
-        self._mark(self.repeat_btn, st["repeat"] > 0)
-        self.repeat_btn.set_icon_name("media-playlist-repeat-song-symbolic" if st["repeat"] == 1
-                                      else "media-playlist-repeat-symbolic")
-        self.repeat_btn.set_tooltip_text(
-            {0: "Repeat is off", 1: "Repeating this song", 2: "Repeating the queue"}
-            .get(st["repeat"], "Repeat"))
+        self._update_repeat_button()
         self.shuffle_btn.set_tooltip_text("Shuffle is on" if st["shuffle"] else "Shuffle is off")
 
         sig = (player.id, st["stamp"], st["count"])

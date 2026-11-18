@@ -53,6 +53,8 @@ stage() {
         "$dest/usr/share/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg"
     install -D -m 644 "data/icons/hicolor/256x256/apps/$APP_ID.png" \
         "$dest/usr/share/icons/hicolor/256x256/apps/$APP_ID.png"
+    install -D -m 644 data/icons/hicolor/scalable/actions/kora-dstm-symbolic.svg \
+        "$dest/usr/share/icons/hicolor/scalable/actions/kora-dstm-symbolic.svg"
     install -D -m 644 README.md "$dest/usr/share/doc/$NAME/README.md"
 }
 
@@ -155,6 +157,7 @@ cp -a "$stage_dir/." %{buildroot}/
 /usr/share/icons/hicolor/scalable/apps/$APP_ID.svg
 /usr/share/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg
 /usr/share/icons/hicolor/256x256/apps/$APP_ID.png
+/usr/share/icons/hicolor/scalable/actions/kora-dstm-symbolic.svg
 EOF
     rpmbuild -bb --quiet \
         --define "_topdir $top" \
