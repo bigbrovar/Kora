@@ -93,8 +93,8 @@ class BrowsePage(Adw.NavigationPage):
         self._gen = 0
         self.store = Gio.ListStore(item_type=ItemObject)
 
-        # Pages that default to a grid (albums) can be flipped to a list; the
-        # choice is remembered and shared by every such page.
+        # Pages that default to a grid (albums) can be shown as a list instead;
+        # the choice lives in the main menu and is shared by every such page.
         self.switchable = layout == "grid"
         if self.switchable and win.cfg.get("album_view") == "list":
             self.layout = "list"
@@ -112,12 +112,8 @@ class BrowsePage(Adw.NavigationPage):
         self.header = Adw.HeaderBar()
         self.header.pack_start(win.make_sidebar_toggle())
         if self.switchable:
-            self.view_btn = Gtk.Button()
-            self.view_btn.connect("clicked", lambda _b: self._toggle_layout())
-            self.header.pack_end(self.view_btn)
-            self._update_view_button()
-            # Another page may have changed the choice while this one was hidden.
-            self.connect("showing", lambda _p: self._apply_layout(win.cfg.get("album_view")))
+            # The choice is made in the main menu (View); pick it up when shown.
+            self.connect("showing", lambda _p: self.apply_layout(win.cfg.get("album_view")))
         if actions_item is not None:
             add = Gtk.Button(icon_name="list-add-symbolic", tooltip_text="Add all to queue")
             add.connect("clicked", lambda _b: win.play_item(actions_item, "add"))
@@ -151,25 +147,12 @@ class BrowsePage(Adw.NavigationPage):
         self.view.connect("activate", self._activated)
         self.scroller.set_child(self.view)
 
-    def _update_view_button(self):
-        if self.layout == "grid":
-            self.view_btn.set_icon_name("view-list-symbolic")
-            self.view_btn.set_tooltip_text("Show as list")
-        else:
-            self.view_btn.set_icon_name("view-grid-symbolic")
-            self.view_btn.set_tooltip_text("Show as grid")
-
-    def _apply_layout(self, layout):
+    def apply_layout(self, layout):
+        """Switch an album page between grid and list. Other pages ignore it."""
         if not self.switchable or layout not in ("grid", "list") or layout == self.layout:
             return
         self.layout = layout
         self._build_view()
-        self._update_view_button()
-
-    def _toggle_layout(self):
-        layout = "list" if self.layout == "grid" else "grid"
-        self.win.cfg.set("album_view", layout)
-        self._apply_layout(layout)
 
     # ---------------------------------------------------------------- loading
 

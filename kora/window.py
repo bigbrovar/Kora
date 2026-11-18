@@ -156,6 +156,29 @@ class KoraWindow(Adw.ApplicationWindow):
         add("previous", lambda: self.command(lambda p: p.prev()), ("<Control>Left",))
         add("queue", lambda: self.queue_btn.set_active(not self.queue_btn.get_active()), ("F9",))
 
+        # View > Grid / List for album pages: a radio pair in the main menu.
+        current = self.cfg.get("album_view")
+        view = Gio.SimpleAction.new_stateful(
+            "album-view", GLib.VariantType.new("s"),
+            GLib.Variant("s", current if current in ("grid", "list") else "grid"))
+        view.connect("activate", self._album_view_chosen)
+        self.add_action(view)
+        app = self.get_application()
+        app.set_accels_for_action("win.album-view::list", ["<Control>1"])
+        app.set_accels_for_action("win.album-view::grid", ["<Control>2"])
+
+    def _album_view_chosen(self, action, value):
+        layout = value.get_string()
+        if layout not in ("grid", "list"):
+            return
+        action.set_state(value)
+        self.cfg.set("album_view", layout)
+        stack = self.nav.get_navigation_stack()
+        for index in range(stack.get_n_items()):
+            page = stack.get_item(index)
+            if hasattr(page, "apply_layout"):
+                page.apply_layout(layout)
+
     # --------------------------------------------------------- connect page
 
     def _build_connect_page(self):
@@ -261,6 +284,12 @@ class KoraWindow(Adw.ApplicationWindow):
 
     def _build_sidebar(self):
         menu = Gio.Menu()
+        view = Gio.Menu()
+        view.append("Grid", "win.album-view::grid")
+        view.append("List", "win.album-view::list")
+        view_section = Gio.Menu()
+        view_section.append_submenu("View", view)
+        menu.append_section(None, view_section)
         mix = Gio.Menu()
         mix.append("Play Random Songs", "win.random-tracks")
         mix.append("Play Random Albums", "win.random-albums")
@@ -276,8 +305,9 @@ class KoraWindow(Adw.ApplicationWindow):
 
         header = Adw.HeaderBar()
         header.set_title_widget(Adw.WindowTitle(title=APP_NAME))
-        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu,
-                                       tooltip_text="Main menu", primary=True))
+        self.menu_btn = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu,
+                                       tooltip_text="Main menu", primary=True)
+        header.pack_end(self.menu_btn)
 
         self.section_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         self.section_list.add_css_class("navigation-sidebar")

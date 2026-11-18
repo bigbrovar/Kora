@@ -21,8 +21,8 @@ It is named after the kora, the 21-string West African harp-lute.
 ## What it does
 
 - **Browse your library**: albums (with artwork), artists, new music, random
-  albums, genres, years and playlists. Album pages switch between a grid and a
-  compact list with the button in the header bar.
+  albums, genres, years and playlists. Album pages can be shown as a grid or a
+  compact list (main menu, View).
 - **Search** artists, albums and songs as you type.
 - **Radio, Apps and Favorites**: browse any LMS plugin menu, including the
   ones that ask for a search term.
@@ -123,6 +123,7 @@ sudo apt install squeezelite     # Ubuntu / Debian
 | Ctrl+F | Search |
 | Ctrl+Space | Play / pause |
 | Ctrl+Right, Ctrl+Left | Next / previous track |
+| Ctrl+1, Ctrl+2 | Albums as list / as grid |
 | F9 | Show or hide the queue |
 | Ctrl+, | Preferences |
 | Ctrl+Q | Quit |
