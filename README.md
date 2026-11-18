@@ -21,7 +21,8 @@ It is named after the kora, the 21-string West African harp-lute.
 ## What it does
 
 - **Browse your library**: albums (with artwork), artists, new music, random
-  albums, genres, years and playlists.
+  albums, genres, years and playlists. Album pages switch between a grid and a
+  compact list with the button in the header bar.
 - **Search** artists, albums and songs as you type.
 - **Radio, Apps and Favorites**: browse any LMS plugin menu, including the
   ones that ask for a search term.

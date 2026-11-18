@@ -12,6 +12,7 @@ DEFAULTS = {
     "squeezelite": False,    # start a managed Squeezelite with the app
     "squeezelite_name": "",  # empty = "Kora on <hostname>"
     "local_volume": 80,
+    "album_view": "grid",    # "grid" or "list" for album pages
     "width": 1180,
     "height": 760,
 }
