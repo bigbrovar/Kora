@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kora"
+version = "0.3.1"
+description = "GTK4/libadwaita client for Lyrion Music Server (Logitech Media Server)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+# PyGObject, GTK4, libadwaita and GStreamer come from your distribution packages.
+
+[project.urls]
+Homepage = "https://github.com/bigbrovar/Kora"
+Issues = "https://github.com/bigbrovar/Kora/issues"
+
+[project.gui-scripts]
+kora = "kora.__main__:main"
+
+[tool.setuptools]
+packages = ["kora"]

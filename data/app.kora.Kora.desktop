@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kora
+GenericName=Music Player
+Comment=Browse and play music from Lyrion Music Server
+Exec=kora
+Icon=app.kora.Kora
+Terminal=false
+Categories=AudioVideo;Audio;Player;GTK;
+Keywords=LMS;Lyrion;Logitech;Squeezebox;Squeezelite;Music;
+StartupNotify=true
+StartupWMClass=app.kora.Kora

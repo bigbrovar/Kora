@@ -1,0 +1,10 @@
+#!/usr/bin/python3
+"""Launcher installed as /usr/bin/kora. The app lives in /usr/share/kora so
+the package does not depend on a particular Python minor version."""
+import sys
+
+sys.path.insert(0, "/usr/share/kora")
+
+from kora.__main__ import main  # noqa: E402
+
+sys.exit(main())

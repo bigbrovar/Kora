@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Kora app icon: four sound bars on a purple base, drawn to the GNOME app
+       icon guidelines (128px canvas, square keyline, darker front edge, GNOME
+       palette). Original artwork for this project, GPL-3.0-or-later. -->
+  <defs>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dc8add"/>
+      <stop offset="1" stop-color="#9141ac"/>
+    </linearGradient>
+  </defs>
+  <!-- front edge -->
+  <rect x="12" y="20" width="104" height="96" rx="18" fill="#613583"/>
+  <!-- top surface -->
+  <rect x="12" y="12" width="104" height="96" rx="18" fill="url(#top)"/>
+  <!-- sound bars -->
+  <g fill="#ffffff">
+    <rect x="30" y="46" width="12" height="28" rx="6"/>
+    <rect x="49" y="30" width="12" height="60" rx="6"/>
+    <rect x="68" y="38" width="12" height="44" rx="6"/>
+    <rect x="87" y="50" width="12" height="20" rx="6"/>
+  </g>
+</svg>

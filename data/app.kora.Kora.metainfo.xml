@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.kora.Kora</id>
+  <name>Kora</name>
+  <summary>Browse and play music from Lyrion Music Server</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      Kora is a GTK4 and libadwaita client for Lyrion Music Server, formerly
+      Logitech Media Server. Browse your library, radio, apps and favorites,
+      control and sync every player on the network, and listen on this
+      computer through the built-in output or a managed Squeezelite.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/bigbrovar/Kora</url>
+  <url type="bugtracker">https://github.com/bigbrovar/Kora/issues</url>
+  <developer id="io.github.bigbrovar">
+    <name>bigbrovar</name>
+  </developer>
+  <launchable type="desktop-id">app.kora.Kora.desktop</launchable>
+  <provides>
+    <binary>kora</binary>
+  </provides>
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Player</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.3.1" date="2026-11-18"/>
+  </releases>
+</component>
