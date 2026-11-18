@@ -18,11 +18,12 @@ CSS = """
 .cover { border-radius: 9px; background-color: alpha(currentColor, 0.08); }
 .cover-small { border-radius: 5px; background-color: alpha(currentColor, 0.08); }
 /* Secondary text (the smaller, greyer line under a title).
-   Sized with "smaller", the same rule libadwaita uses for its own subtitles,
-   and dimmed through the colour. It avoids the stock "caption" class (newer
-   libadwaita adds line-height: 140% to it) and "dim-label" (widget opacity).
-   KORA_SMALL_TEXT overrides the size for testing, e.g. KORA_SMALL_TEXT=90%. */
-.kora-small { font-size: smaller; }
+   88% and not the usual 82%: on GTK 4.24 at 100% scale the 82% size loses
+   the top pixel row of its letters on some rows (E without its top bar, 7
+   without its stroke); 88% and above render cleanly. Dimmed through the
+   colour. Avoids the stock "caption" and "dim-label" classes.
+   KORA_SMALL_TEXT overrides the size for testing, e.g. KORA_SMALL_TEXT=92%. */
+.kora-small { font-size: 88%; }
 .kora-dim { color: alpha(currentColor, 0.6); }
 .playerbar { padding: 6px 10px; }
 .playerbar scale trough, .playerbar scale highlight { border-radius: 99px; }
@@ -125,7 +126,7 @@ class KoraWindow(Adw.ApplicationWindow):
         size = os.environ.get("KORA_SMALL_TEXT", "").strip()
         if size:
             if re.fullmatch(r"smaller|\d{2,3}%|\d+(\.\d+)?(pt|px|em)", size):
-                css = css.replace(".kora-small { font-size: smaller; }",
+                css = css.replace(".kora-small { font-size: 88%; }",
                                   f".kora-small {{ font-size: {size}; }}")
                 print(f"kora: small text size set to {size}", file=sys.stderr, flush=True)
             else:

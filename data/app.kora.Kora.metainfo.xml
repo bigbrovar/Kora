@@ -26,6 +26,9 @@
   </categories>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.1" date="2026-11-18">
+      <description><p>Fixes small text losing the top of its letters on some displays.</p></description>
+    </release>
     <release version="0.5.0" date="2026-11-18">
       <description><p>The repeat button now also switches Don't Stop The Music on and off.</p></description>
     </release>
