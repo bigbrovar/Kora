@@ -1,5 +1,8 @@
 """Main window: connect page, sidebar, browse stack, queue and player bar."""
 
+import os
+import re
+import sys
 import time
 
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
@@ -14,6 +17,14 @@ from .util import ArtCache, fmt_time, run_async
 CSS = """
 .cover { border-radius: 9px; background-color: alpha(currentColor, 0.08); }
 .cover-small { border-radius: 5px; background-color: alpha(currentColor, 0.08); }
+/* Secondary text (the smaller, greyer line under a title).
+   88% and not the usual 82%: on GTK 4.24 at 100% scale the 82% size loses
+   the top pixel row of its letters on some rows (E without its top bar, 7
+   without its stroke); 88% and above render cleanly. Dimmed through the
+   colour. Avoids the stock "caption" and "dim-label" classes.
+   KORA_SMALL_TEXT overrides the size for testing, e.g. KORA_SMALL_TEXT=92%. */
+.kora-small { font-size: 88%; }
+.kora-dim { color: alpha(currentColor, 0.6); }
 .playerbar { padding: 6px 10px; }
 .playerbar scale trough, .playerbar scale highlight { border-radius: 99px; }
 .browse-list > row, .album-grid > child { transition: background-color 120ms; }
@@ -106,17 +117,27 @@ class KoraWindow(Adw.ApplicationWindow):
         try:
             fn()
         except Exception:
-            import sys
             import traceback
             print(f"kora: {what} is unavailable on this system:", file=sys.stderr)
             traceback.print_exc()
 
     def _load_css(self):
+        css = CSS
+        size = os.environ.get("KORA_SMALL_TEXT", "").strip()
+        if size:
+            if re.fullmatch(r"smaller|\d{2,3}%|\d+(\.\d+)?(pt|px|em)", size):
+                css = css.replace(".kora-small { font-size: 88%; }",
+                                  f".kora-small {{ font-size: {size}; }}")
+                print(f"kora: small text size set to {size}", file=sys.stderr, flush=True)
+            else:
+                print(f"kora: ignoring KORA_SMALL_TEXT={size!r} "
+                      "(use smaller, a percentage like 90%, or a size like 9pt)",
+                      file=sys.stderr, flush=True)
         provider = Gtk.CssProvider()
         if hasattr(provider, "load_from_string"):
-            provider.load_from_string(CSS)
+            provider.load_from_string(css)
         else:
-            provider.load_from_data(CSS.encode())
+            provider.load_from_data(css.encode())
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
@@ -359,7 +380,7 @@ class KoraWindow(Adw.ApplicationWindow):
         # Don't Stop The Music: a server plugin that keeps adding similar
         # tracks when the queue runs out. Set per player.
         self.dstm_label = _label(label="Don't Stop the Music")
-        self.dstm_state = _label(("dim-label", "caption"), label="")
+        self.dstm_state = _label(("kora-dim", "kora-small"), label="")
         dstm_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1, hexpand=True)
         dstm_text.append(self.dstm_label)
         dstm_text.append(self.dstm_state)
@@ -445,7 +466,7 @@ class KoraWindow(Adw.ApplicationWindow):
         text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER,
                        hexpand=True, spacing=1)
         title = _label()
-        sub = _label(("dim-label", "caption"))
+        sub = _label(("kora-dim", "kora-small"))
         text.append(title)
         text.append(sub)
         remove = _flat_button("window-close-symbolic", "Remove from queue")
@@ -472,7 +493,7 @@ class KoraWindow(Adw.ApplicationWindow):
     def _build_player_bar(self):
         self.bar_cover = Cover(52, "cover-small")
         self.now_title = _label(("now-title",), label="Nothing playing")
-        self.now_artist = _label(("dim-label", "caption"))
+        self.now_artist = _label(("kora-dim", "kora-small"))
         now = self.now_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
                                      valign=Gtk.Align.CENTER, spacing=2)
         now.set_size_request(100, -1)
@@ -491,8 +512,8 @@ class KoraWindow(Adw.ApplicationWindow):
         nxt = _flat_button("media-skip-forward-symbolic", "Next")
         nxt.connect("clicked", lambda _b: self.command(lambda p: p.next()))
 
-        self.pos_label = _label(("dim-label", "numeric", "caption"), label="0:00")
-        self.dur_label = _label(("dim-label", "numeric", "caption"), label="0:00")
+        self.pos_label = _label(("kora-dim", "numeric", "kora-small"), label="0:00")
+        self.dur_label = _label(("kora-dim", "numeric", "kora-small"), label="0:00")
         self.seek = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 1, 1)
         self.seek.set_draw_value(False)
         self.seek.set_hexpand(True)
@@ -680,7 +701,7 @@ class KoraWindow(Adw.ApplicationWindow):
                            valign=Gtk.Align.CENTER)
             text.append(_label(label=p.name, max_width_chars=28))
             detail = p.model if p.connected else "Disconnected"
-            text.append(_label(("dim-label", "caption"), label=detail))
+            text.append(_label(("kora-dim", "kora-small"), label=detail))
             box.append(check)
             box.append(text)
             if (not p.is_local and current is not None and not current.is_local

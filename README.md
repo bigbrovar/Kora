@@ -160,6 +160,8 @@ something is wrong.
 - **Start with the extras off**: `kora --safe` skips the custom styling, the
   adaptive layout and MPRIS. `--without=css`, `--without=breakpoints` or
   `--without=mpris` leave out one of them.
+- **Small grey text looks cut off at the top**: try a slightly larger size,
+  for example `KORA_SMALL_TEXT=92% kora`, and report which size fixes it.
 - **A format will not play on This computer**: install the extra GStreamer
   codecs (`gstreamer1-plugin-libav` on Fedora, `gstreamer1.0-libav` on Ubuntu).
 

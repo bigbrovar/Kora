@@ -31,6 +31,32 @@ def log(*parts):
     print("kora:", *parts, file=sys.stderr, flush=True)
 
 
+def source():
+    """Where this copy of the code comes from: a git checkout (with branch
+    and commit) or an installed copy. Shown at start-up so it is obvious
+    which version is actually running."""
+    root = os.path.dirname(HERE)
+    git = os.path.join(root, ".git")
+    try:
+        with open(os.path.join(git, "HEAD"), encoding="utf-8") as fh:
+            head = fh.read().strip()
+        if not head.startswith("ref: "):
+            return f"git {head[:7]} (detached) in {root}"
+        ref = head[5:]
+        commit = ""
+        try:
+            with open(os.path.join(git, ref), encoding="utf-8") as fh:
+                commit = fh.read().strip()
+        except OSError:
+            with open(os.path.join(git, "packed-refs"), encoding="utf-8") as fh:
+                for line in fh:
+                    if line.strip().endswith(" " + ref):
+                        commit = line.split()[0]
+        return f"git {ref.rsplit('/', 1)[-1]} {commit[:7]} in {root}"
+    except OSError:
+        return f"files in {root}"
+
+
 def banner(skip):
     note = f" (without {', '.join(sorted(skip))})" if skip else ""
     log(f"{__version__}{note}",
@@ -40,6 +66,7 @@ def banner(skip):
         f"| Python {sys.version.split()[0]}",
         f"| session {os.environ.get('XDG_SESSION_TYPE', '?')}"
         f"/{os.environ.get('XDG_CURRENT_DESKTOP', '?')}")
+    log("running from", source())
 
 
 class KoraApp(Adw.Application):
