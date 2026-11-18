@@ -93,20 +93,13 @@ class BrowsePage(Adw.NavigationPage):
         self._gen = 0
         self.store = Gio.ListStore(item_type=ItemObject)
 
-        factory = Gtk.SignalListItemFactory()
-        factory.connect("setup", self._setup_cell if layout == "grid" else self._setup_row)
-        factory.connect("bind", self._bind_cell if layout == "grid" else self._bind_row)
-        model = Gtk.NoSelection(model=self.store)
-        if layout == "grid":
-            self.view = Gtk.GridView(model=model, factory=factory, min_columns=2, max_columns=14)
-            self.view.add_css_class("album-grid")
-        else:
-            self.view = Gtk.ListView(model=model, factory=factory)
-            self.view.add_css_class("browse-list")
-        self.view.set_single_click_activate(True)
-        self.view.connect("activate", self._activated)
-
-        scroller = Gtk.ScrolledWindow(child=self.view, vexpand=True)
+        # Pages that default to a grid (albums) can be shown as a list instead;
+        # the choice lives in the main menu and is shared by every such page.
+        self.switchable = layout == "grid"
+        if self.switchable and win.cfg.get("album_view") == "list":
+            self.layout = "list"
+        scroller = self.scroller = Gtk.ScrolledWindow(vexpand=True)
+        self._build_view()
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         spinner = Gtk.Spinner(spinning=True, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
         spinner.set_size_request(32, 32)
@@ -118,6 +111,9 @@ class BrowsePage(Adw.NavigationPage):
 
         self.header = Adw.HeaderBar()
         self.header.pack_start(win.make_sidebar_toggle())
+        if self.switchable:
+            # The choice is made in the main menu (View); pick it up when shown.
+            self.connect("showing", lambda _p: self.apply_layout(win.cfg.get("album_view")))
         if actions_item is not None:
             add = Gtk.Button(icon_name="list-add-symbolic", tooltip_text="Add all to queue")
             add.connect("clicked", lambda _b: win.play_item(actions_item, "add"))
@@ -131,6 +127,32 @@ class BrowsePage(Adw.NavigationPage):
         self.set_child(toolbar)
         if autoload:
             self.reload()
+
+    # ------------------------------------------------------------ grid / list
+
+    def _build_view(self):
+        """(Re)create the grid or list widget on top of the same item store."""
+        grid = self.layout == "grid"
+        factory = Gtk.SignalListItemFactory()
+        factory.connect("setup", self._setup_cell if grid else self._setup_row)
+        factory.connect("bind", self._bind_cell if grid else self._bind_row)
+        model = Gtk.NoSelection(model=self.store)
+        if grid:
+            self.view = Gtk.GridView(model=model, factory=factory, min_columns=2, max_columns=14)
+            self.view.add_css_class("album-grid")
+        else:
+            self.view = Gtk.ListView(model=model, factory=factory)
+            self.view.add_css_class("browse-list")
+        self.view.set_single_click_activate(True)
+        self.view.connect("activate", self._activated)
+        self.scroller.set_child(self.view)
+
+    def apply_layout(self, layout):
+        """Switch an album page between grid and list. Other pages ignore it."""
+        if not self.switchable or layout not in ("grid", "list") or layout == self.layout:
+            return
+        self.layout = layout
+        self._build_view()
 
     # ---------------------------------------------------------------- loading
 
@@ -200,8 +222,10 @@ class BrowsePage(Adw.NavigationPage):
         item = li.get_item().item
         cover, title, sub, duration, add, play, chevron = li.get_child().parts
         title.set_label(item.title)
-        sub.set_label(item.subtitle)
-        sub.set_visible(bool(item.subtitle))
+        year = item.extra.get("year") if item.kind == "album" else None
+        detail = " · ".join(str(x) for x in (item.subtitle, year) if x)
+        sub.set_label(detail)
+        sub.set_visible(bool(detail))
         secs = item.extra.get("duration") if item.kind == "track" else 0
         duration.set_label(fmt_time(secs) if secs else "")
         add.set_visible(item.playable)
