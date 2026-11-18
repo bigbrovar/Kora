@@ -1058,9 +1058,7 @@ def show_about(window):
     Adw.AboutDialog(
         application_name=APP_NAME, application_icon=APP_ID,
         version=__version__, license_type=Gtk.License.GPL_3_0,
-        developer_name="bigbrovar",
         website="https://github.com/bigbrovar/Kora",
-        issue_url="https://github.com/bigbrovar/Kora/issues",
         comments="A GTK4 client for Lyrion Music Server (Logitech Media Server).\n"
                  "Browse the library, control every player and listen on this computer.",
     ).present(window)

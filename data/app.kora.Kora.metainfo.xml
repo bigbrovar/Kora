@@ -15,9 +15,6 @@
   </description>
   <url type="homepage">https://github.com/bigbrovar/Kora</url>
   <url type="bugtracker">https://github.com/bigbrovar/Kora/issues</url>
-  <developer id="io.github.bigbrovar">
-    <name>bigbrovar</name>
-  </developer>
   <launchable type="desktop-id">app.kora.Kora.desktop</launchable>
   <provides>
     <binary>kora</binary>
