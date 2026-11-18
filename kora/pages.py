@@ -203,10 +203,10 @@ class BrowsePage(Adw.NavigationPage):
         text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER,
                        hexpand=True, spacing=2)
         title = _label()
-        sub = _label(("dim-label", "caption"))
+        sub = _label(("kora-dim", "kora-small"))
         text.append(title)
         text.append(sub)
-        duration = _label(("dim-label", "numeric"))
+        duration = _label(("kora-dim", "numeric"))
         add = _flat_button("list-add-symbolic", "Add to queue")
         play = _flat_button("media-playback-start-symbolic", "Play now")
         chevron = Gtk.Image(icon_name="go-next-symbolic")
@@ -247,7 +247,7 @@ class BrowsePage(Adw.NavigationPage):
         play.connect("clicked", lambda _b: self.win.play_item(li.get_item().item, "load"))
         cover.add_overlay(play)
         title = _label(("heading",), max_width_chars=18, margin_top=4)
-        sub = _label(("dim-label", "caption"), max_width_chars=18)
+        sub = _label(("kora-dim", "kora-small"), max_width_chars=18)
         box.append(cover)
         box.append(title)
         box.append(sub)
@@ -315,7 +315,7 @@ class CollectionPage(Adw.NavigationPage):
         sub = Gtk.Label(label=item.subtitle, xalign=0, wrap=True, visible=bool(item.subtitle))
         sub.add_css_class("title-4")
         self.info = Gtk.Label(xalign=0)
-        self.info.add_css_class("dim-label")
+        self.info.add_css_class("kora-dim")
 
         play = Gtk.Button(child=Adw.ButtonContent(icon_name="media-playback-start-symbolic",
                                                   label="Play"))
@@ -382,13 +382,13 @@ class CollectionPage(Adw.NavigationPage):
                 row.set_subtitle_lines(1)
             number = track.extra.get("tracknum") if is_album else pos + 1
             num = Gtk.Label(label=str(number or pos + 1), width_chars=3, xalign=1)
-            num.add_css_class("dim-label")
+            num.add_css_class("kora-dim")
             num.add_css_class("numeric")
             row.add_prefix(num)
             secs = track.extra.get("duration")
             if secs:
                 dur = Gtk.Label(label=fmt_time(secs))
-                dur.add_css_class("dim-label")
+                dur.add_css_class("kora-dim")
                 dur.add_css_class("numeric")
                 row.add_suffix(dur)
             add = _flat_button("list-add-symbolic", "Add to queue")
